@@ -1,0 +1,18 @@
+[package]
+name = "versioned"
+version = "0.1.0"
+authors = ["Taras Denysenko <terrapass93@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Provides a pointer-like wrapper for counting mutations."
+repository = "https://github.com/terrapass/rs-versioned"
+readme = "README.md"
+keywords = ["version", "mutation", "cache", "caching"]
+categories = ["caching"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[badges]
+travis-ci = { repository = "terrapass/rs-versioned", branch = "master" }
