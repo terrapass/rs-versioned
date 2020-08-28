@@ -50,10 +50,6 @@ impl<T> Versioned<T> {
     pub fn version(&self) -> Version {
         self.1
     }
-
-    pub fn has_mutated_since(&self, version: Version) -> bool {
-        self.version() > version
-    }
 }
 
 impl<T> Versioned<T>
@@ -73,7 +69,6 @@ mod tests {
         let versioned_value = Versioned::new(42);
 
         assert_eq!(versioned_value.version(), 0);
-        assert!(!versioned_value.has_mutated_since(0));
     }
 
     #[test]
@@ -81,7 +76,6 @@ mod tests {
         let versioned_value = Versioned::with_version("value", 53);
 
         assert_eq!(versioned_value.version(), 53);
-        assert!(!versioned_value.has_mutated_since(53));
     }
 
     #[test]
@@ -91,13 +85,11 @@ mod tests {
         let _ = versioned_value.get();
 
         assert_eq!(versioned_value.version(), 0);
-        assert!(!versioned_value.has_mutated_since(0));
 
         versioned_value.get();
         versioned_value.get();
 
         assert_eq!(versioned_value.version(), 0);
-        assert!(!versioned_value.has_mutated_since(0));
     }
 
     #[test]
@@ -107,17 +99,10 @@ mod tests {
         *versioned_value.get_mut() = 10;
 
         assert_eq!(versioned_value.version(), 1);
-        assert!(versioned_value.has_mutated_since(0));
 
         let _ = versioned_value.get_mut();
         let _ = versioned_value.get_mut();
 
         assert_eq!(versioned_value.version(), 3);
-
-        for version in 0..3 {
-            assert!(versioned_value.has_mutated_since(version))
-        }
-
-        assert!(!versioned_value.has_mutated_since(3));
     }
 }
