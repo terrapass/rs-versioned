@@ -17,7 +17,7 @@ impl<T> Clone for Versioned<T>
     where T: Clone
 {
     fn clone(&self) -> Self {
-        Self::with_version(self.0.clone(), self.1)
+        Self::new(self.0.clone())
     }
 }
 
