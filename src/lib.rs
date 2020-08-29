@@ -133,6 +133,22 @@ mod tests {
         assert_eq!(versioned_value.version(), 97);
     }
 
+    #[test]
+    fn version_reset_on_clone() {
+        let mut versioned_value_0 = Versioned::new("Hello".to_string());
+
+        versioned_value_0.push_str("World!");
+        versioned_value_0.pop();
+
+        assert_eq!(*versioned_value_0, "HelloWorld");
+        assert_eq!(versioned_value_0.version(), 2);
+
+        let versioned_value_1 = versioned_value_0.clone();
+
+        assert_eq!(*versioned_value_1, *versioned_value_0);
+        assert_eq!(versioned_value_1.version(), INITIAL_VERSION);
+    }
+
     #[allow(unused_must_use)]
     #[test]
     fn version_unchanged_on_as_ref() {
@@ -164,5 +180,16 @@ mod tests {
 
         assert_eq!(*versioned_value, 50);
         assert_eq!(versioned_value.version(), 3);
+    }
+
+    #[test]
+    #[should_panic(expected = "overflow")]
+    fn panic_on_version_overflow() {
+        let mut versioned_value: Versioned<String> = Versioned::default_with_version(Version::max_value() - 2);
+
+        versioned_value.push_str("This");
+        versioned_value.push_str("Will");
+        versioned_value.push_str("Overflow");
+        versioned_value.push_str("Version");
     }
 }
