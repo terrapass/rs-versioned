@@ -1,6 +1,6 @@
 pub type Version = usize;
 
-const INITIAL_VERSION: Version = 0;
+pub const INITIAL_VERSION: Version = 0;
 
 #[derive(Debug)]
 pub struct Versioned<T>(T, Version);
