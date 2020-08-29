@@ -1,3 +1,10 @@
+use std::{
+    ops::{
+        Deref,
+        DerefMut
+    }
+};
+
 pub type Version = usize;
 
 pub const INITIAL_VERSION: Version = 0;
@@ -27,7 +34,41 @@ impl<T> Copy for Versioned<T>
     // Empty
 }
 
+impl<T> Deref for Versioned<T> {
+    type Target = T;
+
+    #[must_use]
+    fn deref(&self) -> &Self::Target {
+        self.as_ref_impl()
+    }
+}
+
+impl<T> DerefMut for Versioned<T> {
+    #[must_use = "mutation will be counted even if mutable dereference result is not actually used"]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.as_mut_impl()
+    }
+}
+
+impl<T> AsRef<T> for Versioned<T> {
+    #[must_use]
+    fn as_ref(&self) -> &T {
+        self.as_ref_impl()
+    }
+}
+
+impl<T> AsMut<T> for Versioned<T> {
+    #[must_use = "mutation will be counted even if mutable reference returned from as_mut() is not actually used"]
+    fn as_mut(&mut self) -> &mut T {
+        self.as_mut_impl()
+    }
+}
+
 impl<T> Versioned<T> {
+    //
+    // Interface
+    //
+
     pub fn new(value: T) -> Self {
         Self::with_version(value, INITIAL_VERSION)
     }
@@ -36,19 +77,23 @@ impl<T> Versioned<T> {
         Self(value, version)
     }
 
-    pub fn get(&self) -> &T {
+    pub fn version(&self) -> Version {
+        self.1
+    }
+
+    //
+    // Service
+    //
+
+    fn as_ref_impl(&self) -> &T {
         &self.0
     }
 
-    #[must_use = "mutation will be counted even if reference returned from get_mut() is not actually used"]
-    pub fn get_mut(&mut self) -> &mut T {
+    //#[must_use = "mutation will be counted even if reference returned from get_mut() is not actually used"]
+    fn as_mut_impl(&mut self) -> &mut T {
         self.1 += 1;
 
         &mut self.0
-    }
-
-    pub fn version(&self) -> Version {
-        self.1
     }
 }
 
@@ -68,6 +113,7 @@ mod tests {
     fn version_zero_on_new() {
         let versioned_value = Versioned::new(42);
 
+        assert_eq!(*versioned_value, 42);
         assert_eq!(versioned_value.version(), 0);
     }
 
@@ -75,34 +121,48 @@ mod tests {
     fn version_correct_on_with_version() {
         let versioned_value = Versioned::with_version("value", 53);
 
+        assert_eq!(*versioned_value, "value");
         assert_eq!(versioned_value.version(), 53);
     }
 
     #[test]
-    fn version_unchanged_on_get() {
+    fn version_correct_on_default_with_version() {
+        let versioned_value: Versioned<String> = Versioned::default_with_version(97);
+
+        assert_eq!(*versioned_value, String::default());
+        assert_eq!(versioned_value.version(), 97);
+    }
+
+    #[allow(unused_must_use)]
+    #[test]
+    fn version_unchanged_on_as_ref() {
         let versioned_value = Versioned::new("some value");
 
-        let _ = versioned_value.get();
+        let _ = *versioned_value;
+        let _ = versioned_value.as_ref();
 
         assert_eq!(versioned_value.version(), 0);
 
-        versioned_value.get();
-        versioned_value.get();
+        *versioned_value;
+        versioned_value.as_ref();
 
+        assert_eq!(*versioned_value, "some value");
         assert_eq!(versioned_value.version(), 0);
     }
 
     #[test]
-    fn version_increment_on_get_mut() {
+    fn version_increment_on_as_mut() {
         let mut versioned_value = Versioned::new(255);
 
-        *versioned_value.get_mut() = 10;
+        *versioned_value = 10;
 
+        assert_eq!(*versioned_value, 10);
         assert_eq!(versioned_value.version(), 1);
 
-        let _ = versioned_value.get_mut();
-        let _ = versioned_value.get_mut();
+        *versioned_value = 50;
+        let _ = versioned_value.as_mut();
 
+        assert_eq!(*versioned_value, 50);
         assert_eq!(versioned_value.version(), 3);
     }
 }
